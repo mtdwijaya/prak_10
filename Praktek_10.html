@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praktek Fragment &amp; BottomNavigation | Pemrograman Android</title>
+<style>
+:root{
+  --primary:#3DDC84;
+  --primary-dark:#2db86f;
+  --secondary:#4285F4;
+  --danger:#d93025;
+  --dark:#1a1a2e;
+  --darker:#16213e;
+  --code-bg:#282c34;
+  --border:#dee2e6;
+  --shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -1px rgba(0,0,0,.06);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f2f5;color:#333;line-height:1.7}
+.main-header{background:linear-gradient(135deg,var(--dark),var(--darker));color:#fff;padding:3rem 1rem;text-align:center}
+.main-header h1{font-size:2.3rem;margin-bottom:.5rem}
+.main-header .subtitle{font-size:1.05rem;opacity:.9;max-width:780px;margin:0 auto}
+.android-icon{font-size:4rem;margin-bottom:1rem}
+
+/* ===== Menu samping ===== */
+.content{margin-left:280px;min-height:100vh;display:flex;flex-direction:column}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:280px;background:linear-gradient(180deg,var(--dark),var(--darker));
+  color:#fff;overflow-y:auto;z-index:1100;padding:1.5rem 0 2rem;box-shadow:2px 0 12px rgba(0,0,0,.18)}
+.sidebar-brand{display:flex;align-items:center;gap:.75rem;padding:0 1.25rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:1rem}
+.sidebar-brand .brand-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.sidebar-brand .brand-title{font-size:1rem;font-weight:700;line-height:1.2}
+.sidebar-brand .brand-sub{font-size:.72rem;color:#9fb3c8;line-height:1.3}
+.sidebar-label{padding:.25rem 1.4rem;font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:#7c8ea3;margin-bottom:.35rem}
+.sidebar-nav{display:flex;flex-direction:column;gap:.15rem;padding:0 .75rem}
+.sidebar-nav a{display:flex;align-items:center;gap:.65rem;text-decoration:none;color:#c7d2dc;padding:.6rem .8rem;
+  border-radius:8px;font-size:.86rem;border-left:3px solid transparent;transition:background .2s,color .2s,border-color .2s}
+.sidebar-nav a .num{font-size:.7rem;font-weight:700;color:var(--primary);min-width:20px}
+.sidebar-nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.sidebar-nav a.active{background:rgba(61,220,132,.15);color:#fff;border-left-color:var(--primary);font-weight:600}
+.sidebar-foot{margin:1.5rem 1.25rem 0;padding-top:1rem;border-top:1px solid rgba(255,255,255,.12);
+  font-size:.72rem;color:#7c8ea3;line-height:1.5}
+.sidebar-toggle{display:none;position:fixed;top:14px;left:14px;z-index:1200;background:var(--dark);color:#fff;border:none;
+  width:46px;height:46px;border-radius:10px;font-size:1.3rem;cursor:pointer;box-shadow:var(--shadow-lg)}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1050}
+.sidebar-overlay.show{display:block}
+
+.container{max-width:1000px;margin:0 auto;padding:2rem 1.5rem;width:100%}
+section{scroll-margin-top:1.25rem}
+.card{background:#fff;border-radius:12px;padding:2rem;margin-bottom:2rem;box-shadow:var(--shadow)}
+.card-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid var(--primary)}
+.card-icon{width:50px;height:50px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;flex-shrink:0}
+.card-title{font-size:1.6rem;color:var(--dark)}
+h2{color:var(--dark);margin:2rem 0 1rem;font-size:1.45rem}
+h3{color:var(--darker);margin:1.5rem 0 .75rem;font-size:1.15rem}
+h4{color:#b45309;margin:1.2rem 0 .5rem;font-size:1rem}
+p{margin-bottom:1rem;text-align:justify}
+ul,ol{margin-left:1.5rem;margin-bottom:1rem}
+li{margin-bottom:.5rem}
+.code-block{background:var(--code-bg);border-radius:8px;padding:1.5rem;margin:1rem 0;overflow-x:auto}
+.code-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid #444}
+.code-title{color:#abb2bf;font-size:.85rem;font-family:monospace}
+.code-lang{background:var(--primary);color:var(--dark);padding:.2rem .6rem;border-radius:4px;font-size:.75rem;font-weight:bold}
+pre{font-family:'Consolas','Monaco','Courier New',monospace;font-size:.88rem;line-height:1.6;color:#abb2bf;white-space:pre-wrap}
+code{font-family:'Consolas','Monaco','Courier New',monospace}
+.inline-code{background:#e9ecef;padding:.2rem .4rem;border-radius:4px;color:#d63384;font-size:.9em}
+.tag{color:#e06c75}.attr{color:#d19a66}.string{color:#98c379}.comment{color:#5c6370;font-style:italic}.keyword{color:#c678dd}
+.info-box{padding:1rem 1.5rem;border-radius:8px;margin:1rem 0;border-left:4px solid}
+.info-box.tip{background:#e8f5e9;border-color:var(--primary-dark)}
+.info-box.warning{background:#fff3e0;border-color:#ff9800}
+.info-box.note{background:#e3f2fd;border-color:var(--secondary)}
+.info-box.error{background:#fdecea;border-color:var(--danger)}
+.info-box-title{font-weight:bold;margin-bottom:.5rem}
+.table-wrapper{overflow-x:auto;margin:1rem 0}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden}
+th{background:var(--dark);color:#fff;padding:1rem;text-align:left;font-weight:600}
+td{padding:.875rem 1rem;border-bottom:1px solid var(--border);vertical-align:top}
+tbody tr:hover{background:#f8f9fa}
+.case-study{background:linear-gradient(135deg,#f5f7fa,#c3cfe2);border-radius:12px;padding:2rem;margin:2rem 0}
+.case-study-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}
+.case-number{width:40px;height:40px;background:var(--secondary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.2rem;flex-shrink:0}
+.step-list{counter-reset:step;list-style:none;margin-left:0}
+.step-list li{counter-increment:step;position:relative;padding-left:3rem;margin-bottom:1.5rem}
+.step-list li::before{content:counter(step);position:absolute;left:0;top:0;width:30px;height:30px;background:var(--primary);color:var(--dark);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:.9rem}
+.checklist{list-style:none;margin-left:0}
+.checklist li{padding:.7rem 1rem .7rem 2.6rem;background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:.5rem;position:relative}
+.checklist li::before{content:"\2713";position:absolute;left:1rem;color:var(--primary-dark);font-weight:800}
+.main-footer{background:var(--dark);color:#fff;text-align:center;padding:2rem 1rem;margin-top:3rem}
+.scroll-top{position:fixed;bottom:2rem;right:2rem;width:50px;height:50px;background:var(--primary);color:var(--dark);border:none;border-radius:50%;font-size:1.5rem;cursor:pointer;box-shadow:var(--shadow-lg);opacity:0;visibility:hidden;transition:all .3s ease;z-index:999}
+.scroll-top.visible{opacity:1;visibility:visible}
+.scroll-top:hover{transform:translateY(-5px);background:var(--primary-dark)}
+
+/* ===== Mockup layar aplikasi ===== */
+.screens{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;margin:22px 0}
+figure.phone{margin:0;text-align:center}
+.phone-body{width:252px;height:498px;background:var(--dark);border-radius:30px;padding:9px;box-shadow:var(--shadow-lg);position:relative}
+.phone-notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:94px;height:16px;background:var(--dark);
+  border-bottom-left-radius:12px;border-bottom-right-radius:12px;z-index:20}
+.phone-screen{position:relative;width:100%;height:100%;border-radius:22px;overflow:hidden;background:#f2f5f7;color:#16213E;
+  font-size:.66rem}
+.phone-screen.dark{background:#121212;color:#F1F5F9}
+figure.phone figcaption{font-size:.8rem;color:#495057;font-weight:600;margin-top:.7rem;max-width:252px;margin-left:auto;margin-right:auto}
+
+.sk-status{position:absolute;top:5px;left:0;right:0;display:flex;justify-content:space-between;padding:0 12px;
+  font-size:.55rem;color:#64748b;z-index:6}
+.phone-screen.dark .sk-status{color:#94a3b8}
+.sk-body{position:absolute;inset:0;padding:22px 11px 11px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.sk-head{border-radius:14px;padding:13px 14px;color:#fff;
+  background:linear-gradient(135deg,#1a1a2e,#16213e);box-shadow:0 6px 14px rgba(26,26,46,.28)}
+.phone-screen.dark .sk-head{background:linear-gradient(135deg,#0b1220,#101a2e)}
+.sk-head .app{font-size:.55rem;font-weight:800;letter-spacing:1px;color:#3DDC84;text-transform:uppercase}
+.sk-head .h1{font-size:.84rem;font-weight:800;line-height:1.3;margin-top:3px}
+.sk-head .p{font-size:.58rem;opacity:.85;margin-top:3px;line-height:1.35}
+.sk-card{background:#fff;border:1px solid #E2E8F0;border-radius:11px;padding:9px 11px;display:flex;gap:8px;align-items:flex-start}
+.phone-screen.dark .sk-card{background:#1E1E1E;border-color:#2D3748}
+.sk-ic{width:24px;height:24px;border-radius:7px;background:#E8F7EE;display:flex;align-items:center;justify-content:center;
+  font-size:.66rem;flex-shrink:0}
+.phone-screen.dark .sk-ic{background:#1F3B2E}
+.sk-card .t{font-size:.66rem;font-weight:800}
+.sk-card .d{font-size:.55rem;color:#5B6B7C;line-height:1.35}
+.phone-screen.dark .sk-card .d{color:#A0AEC0}
+.sk-sum{background:#fff;border:1px dashed #b9c6d4;border-radius:11px;padding:9px 11px}
+.phone-screen.dark .sk-sum{background:#1E1E1E;border-color:#3b4a5a}
+.sk-sum .k{font-size:.5rem;text-transform:uppercase;letter-spacing:.6px;color:#5B6B7C;font-weight:700}
+.phone-screen.dark .sk-sum .k{color:#A0AEC0}
+.sk-sum .v{font-size:.6rem;font-weight:700;color:#16213E;line-height:1.4}
+.phone-screen.dark .sk-sum .v{color:#F1F5F9}
+.sk-btn{background:#3DDC84;color:#08301c;font-weight:800;border-radius:9px;padding:9px;text-align:center;font-size:.66rem}
+.sk-grp{background:#fff;border:1px solid #E2E8F0;border-radius:11px;padding:9px 11px}
+.phone-screen.dark .sk-grp{background:#1E1E1E;border-color:#2D3748}
+.sk-grp .gt{font-size:.58rem;font-weight:800;color:#16213E;margin-bottom:5px}
+.phone-screen.dark .sk-grp .gt{color:#F1F5F9}
+.sk-rk{display:flex;align-items:center;gap:7px;font-size:.6rem;padding:4px 0}
+.sk-dot{width:13px;height:13px;border-radius:50%;border:2px solid #94a3b8;flex-shrink:0;position:relative}
+.sk-dot.on{border-color:#2db86f}
+.sk-dot.on::after{content:"";position:absolute;inset:2px;border-radius:50%;background:#2db86f}
+.sk-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sk-sw{width:34px;height:18px;border-radius:999px;background:#cbd5e1;position:relative;flex-shrink:0}
+.sk-sw i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;display:block}
+.sk-sw.on{background:#3DDC84}
+.sk-sw.on i{left:auto;right:2px}
+.sk-sub{font-size:.52rem;color:#5B6B7C;line-height:1.35}
+.phone-screen.dark .sk-sub{color:#A0AEC0}
+.sk-danger{border:1.5px solid var(--danger);color:var(--danger);font-weight:800;border-radius:9px;padding:8px;text-align:center;font-size:.62rem;background:transparent}
+.sk-dlg{position:absolute;inset:0;background:rgba(10,14,20,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:9}
+.sk-dlg .box{background:#fff;border-radius:12px;padding:13px;width:100%;box-shadow:0 12px 24px rgba(0,0,0,.3)}
+.phone-screen.dark .sk-dlg .box{background:#1E1E1E}
+.sk-dlg .box .dt{font-size:.68rem;font-weight:800;margin-bottom:4px}
+.sk-dlg .box .dp{font-size:.55rem;color:#5B6B7C;line-height:1.4;margin-bottom:9px}
+.phone-screen.dark .sk-dlg .box .dp{color:#A0AEC0}
+.sk-dlg .acts{display:flex;gap:7px;justify-content:flex-end;font-size:.56rem;font-weight:800}
+.sk-dlg .acts .no{color:#5B6B7C;padding:5px 8px}
+.sk-dlg .acts .yes{color:#fff;background:var(--danger);border-radius:6px;padding:5px 10px}
+.sk-toast{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(31,41,55,.94);color:#fff;
+  font-size:.55rem;padding:6px 12px;border-radius:999px;white-space:nowrap;z-index:8}
+
+@media(max-width:992px){
+  .sidebar-toggle{display:block}
+  .sidebar{transform:translateX(-100%);transition:transform .3s ease;width:270px}
+  .sidebar.open{transform:translateX(0)}
+  .content{margin-left:0}
+  .main-header{padding-top:4.5rem}
+}
+@media(max-width:768px){
+  .main-header h1{font-size:1.6rem}
+  .card{padding:1.5rem}
+  .phone-body{width:230px;height:456px}
+  figure.phone figcaption{max-width:230px}
+}
+@media print{
+  .sidebar,.sidebar-toggle,.sidebar-overlay,.scroll-top,.main-footer{display:none}
+  .content{margin-left:0}
+  .card{break-inside:avoid;box-shadow:none;border:1px solid #ddd}
+}
+
+/* ===== tambahan modul soal praktek ===== */
+.section-number{background:var(--secondary)}
+figure.target{margin:1.5rem 0;text-align:center}
+figure.target img{max-width:100%;border-radius:14px;box-shadow:var(--shadow-lg);border:1px solid var(--border);background:#fff}
+figure.target figcaption{margin-top:.75rem;font-size:.85rem;color:#6b7280;line-height:1.5}
+figure.target figcaption b{color:var(--dark)}
+.dua-gambar{display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.dua-gambar figure.target{flex:1 1 280px;margin:.5rem 0}
+.badge-soal{display:inline-block;background:var(--secondary);color:#fff;padding:.25rem .8rem;border-radius:999px;font-size:.78rem;font-weight:700;letter-spacing:.5px}
+.badge-soal.linearlayout{background:var(--primary-dark)}
+.badge-soal.constraint{background:#7c3aed}
+.ruang-kosong{height:6px}
+.todo-box{border:2px dashed #b9c2d0;border-radius:12px;padding:1rem 1.25rem;background:#fafbfe;margin:1rem 0}
+.todo-box h4{margin-top:0;color:#b45309}
+.aksi-baris{display:flex;gap:.6rem;flex-wrap:wrap;margin:.4rem 0 1.2rem}
+.aksi-baris a{background:var(--dark);color:#fff;text-decoration:none;padding:.5rem .9rem;border-radius:8px;font-size:.8rem}
+.aksi-baris a:hover{background:var(--secondary)}
+.aksi-baris button{background:var(--dark);color:#fff;border:none;padding:.5rem .9rem;border-radius:8px;font-size:.8rem;cursor:pointer}
+.aksi-baris button:hover{background:var(--secondary)}
+.dua-kolom{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:768px){.dua-kolom{grid-template-columns:1fr}}
+.rubrik td:first-child{text-align:center;font-weight:700;white-space:nowrap}
+.skor-total{font-weight:800;color:var(--primary-dark)}
+.kunci{background:#e8f5e9;border-left:4px solid var(--primary-dark);padding:1rem 1.5rem;border-radius:8px;margin:1rem 0}
+.kunci b{color:#14532d}
+.langkah-kecil{margin-left:1.2rem}
+.langkah-kecil li{margin-bottom:.35rem}
+</style>
+</head>
+<body>
+
+<button class="sidebar-toggle" onclick="toggleNav()" aria-label="Buka menu">&#9776;</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleNav()"></div>
+
+<div class="content">
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">&#128203;</div>
+    <div>
+      <div class="brand-title">Praktek Android</div>
+      <div class="brand-sub">Fragment + BottomNavigation</div>
+    </div>
+  </div>
+
+  <div class="sidebar-label">Isi Praktik</div>
+  <nav class="sidebar-nav" id="sidebarNav">
+    <a href="#pengenalan" class="active"><span class="num">01</span>Pengenalan &amp; Tujuan Praktik</a>
+    <a href="#gambar"><span class="num">02</span>Target Tampilan</a>
+    <a href="#persiapan"><span class="num">03</span>Persiapan Proyek &amp; Dependensi</a>
+    <a href="#menu"><span class="num">04</span>Layout Utama, Menu, dan Ikon</a>
+    <a href="#tab-sederhana"><span class="num">05</span>Fragment Jadwal dan Profil</a>
+    <a href="#tugas"><span class="num">06</span>Membuat TugasFragment</a>
+    <a href="#detail"><span class="num">07</span>Detail Tugas dengan Arguments</a>
+    <a href="#mainactivity"><span class="num">08</span>Menghubungkan di MainActivity</a>
+    <a href="#jalankan"><span class="num">09</span>Menjalankan &amp; Menguji Hasil</a>
+    <a href="#backstack"><span class="num">10</span>Memahami Back Stack</a>
+    <a href="#masalah"><span class="num">11</span>Pemecahan Masalah Umum</a>
+    <a href="#rangkuman"><span class="num">12</span>Rangkuman &amp; Langkah Lanjutan</a>
+  </nav>
+
+  <div class="sidebar-foot">
+    <p><strong>Materi pendukung:</strong><br><a href="Teori_9.html" style="color:var(--primary)">Teori 9 &mdash; Fragment dan BottomNavigation</a><br><a href="Teori_8.html" style="color:var(--primary)">Teori 8 &mdash; RecyclerView</a></p>
+    <p><strong>Praktek terkait:</strong><br><a href="Praktek_11.html" style="color:var(--primary)">Praktek 11 &mdash; RecyclerView + RestClient</a></p>
+  </div>
+</aside>
+
+<div class="container">
+
+<header class="main-header">
+  <h1>Praktek Fragment &amp; BottomNavigation</h1>
+  <p class="subtitle">Membangun aplikasi Agenda Kuliah dengan tiga tab di bagian bawah, layar detail yang dibuka dari tab Tugas, dan tombol Back yang bekerja dengan benar.</p>
+</header>
+
+<section id="pengenalan" class="card">
+  <div class="card-header">
+    <div class="card-icon">1</div>
+    <h2 class="card-title">Pengenalan &amp; Tujuan Praktik</h2>
+  </div>
+<p>Pada praktik ini Anda membuat aplikasi <b>Agenda Kuliah</b>. Aplikasi memiliki tiga tab di bagian bawah: <b>Jadwal</b>, <b>Tugas</b>, dan <b>Profil</b>. Dari tab Tugas, pengguna dapat membuka layar detail sebuah tugas, lalu kembali dengan tombol Back.</p>
+<p>Setelah selesai, Anda akan memahami cara membuat beberapa Fragment, memasangnya ke satu Activity, memilih tab lewat BottomNavigationView, dan mengirim data ke Fragment dengan <i>arguments</i>.</p>
+<div class="info-box note"><div class="info-box-title">Prasyarat</div><p style="margin:0">Sudah membaca <b>Teori 9 &mdash; Fragment dan BottomNavigation</b>. Istilah seperti <code class="inline-code">FragmentContainerView</code> dan <code class="inline-code">replace</code> sudah dibahas di sana.</p></div><div class="info-box tip"><div class="info-box-title">Hasil yang harus tampak</div><p style="margin:0">Aplikasi berjalan, tiga tab dapat dipilih, tombol tugas membuka detail, dan tombol Back kembali ke daftar tugas.</p></div>
+</section>
+
+<section id="gambar" class="card">
+  <div class="card-header">
+    <div class="card-icon">2</div>
+    <h2 class="card-title">Target Tampilan</h2>
+  </div>
+<p>Target akhir berisi dua tab dan satu layar detail. Ukuran dan warna boleh berbeda, tetapi susunan elemen dan perilakunya harus sama.</p>
+<figure class="target">
+<svg viewBox="0 0 780 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Target tampilan: tab Jadwal, tab Tugas, dan layar Detail Tugas" style="width:100%;max-width:780px;height:auto;display:block;margin:0 auto;font-family:Segoe UI,Arial,sans-serif">
+<rect width="780" height="500" rx="14" fill="#0b1220"/>
+<rect x="20" y="20" width="220" height="420" rx="30" fill="#0b1220" stroke="#334155" stroke-width="2"/>
+<rect x="30" y="30" width="200" height="400" rx="20" fill="#f8fafc"/>
+<rect x="30" y="30" width="200" height="44" fill="#2f6fed"/>
+<text x="44" y="58" font-size="14" fill="#ffffff" font-weight="700" font-family="sans-serif">Agenda Kuliah</text>
+<rect x="42" y="90" width="176" height="70" rx="12" fill="#e0f2fe"/>
+<text x="54" y="116" font-size="15" fill="#075985" font-weight="700" font-family="sans-serif">Agenda Kuliah</text>
+<text x="54" y="138" font-size="11" fill="#075985" font-weight="400" font-family="sans-serif">Hari ini: 2 kelas</text>
+<rect x="42" y="176" width="176" height="50" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+<text x="54" y="196" font-size="11" fill="#1f2937" font-weight="700" font-family="sans-serif">Pemrograman Android</text>
+<text x="54" y="213" font-size="10" fill="#64748b" font-weight="400" font-family="sans-serif">08.00 - 10.00 | R.301</text>
+<rect x="42" y="234" width="176" height="50" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+<text x="54" y="254" font-size="11" fill="#1f2937" font-weight="700" font-family="sans-serif">Basis Data</text>
+<text x="54" y="271" font-size="10" fill="#64748b" font-weight="400" font-family="sans-serif">13.00 - 15.00 | R.204</text>
+<rect x="30" y="370" width="200" height="60" fill="#ffffff" stroke="#e2e8f0"/>
+<circle cx="63" cy="390" r="8" fill="#2f6fed"/>
+<text x="63" y="416" font-size="10" fill="#2f6fed" font-weight="700" text-anchor="middle" font-family="sans-serif">Jadwal</text>
+<circle cx="130" cy="390" r="8" fill="#94a3b8"/>
+<text x="130" y="416" font-size="10" fill="#94a3b8" font-weight="400" text-anchor="middle" font-family="sans-serif">Tugas</text>
+<circle cx="197" cy="390" r="8" fill="#94a3b8"/>
+<text x="197" y="416" font-size="10" fill="#94a3b8" font-weight="400" text-anchor="middle" font-family="sans-serif">Profil</text>
+<text x="130" y="478" font-size="14" fill="#e2e8f0" font-weight="700" text-anchor="middle" font-family="sans-serif">Tab Jadwal</text>
+<rect x="280" y="20" width="220" height="420" rx="30" fill="#0b1220" stroke="#334155" stroke-width="2"/>
+<rect x="290" y="30" width="200" height="400" rx="20" fill="#f8fafc"/>
+<rect x="290" y="30" width="200" height="44" fill="#2f6fed"/>
+<text x="304" y="58" font-size="14" fill="#ffffff" font-weight="700" font-family="sans-serif">Daftar Tugas</text>
+<text x="304" y="98" font-size="13" fill="#1f2937" font-weight="700" font-family="sans-serif">Daftar tugas</text>
+<rect x="302" y="112" width="176" height="44" rx="10" fill="#2f6fed"/>
+<text x="314" y="139" font-size="12" fill="#ffffff" font-weight="700" font-family="sans-serif">Laporan Fragment</text>
+<rect x="302" y="168" width="176" height="44" rx="10" fill="#2f6fed"/>
+<text x="314" y="195" font-size="12" fill="#ffffff" font-weight="700" font-family="sans-serif">Latihan BottomNav</text>
+<rect x="302" y="224" width="176" height="44" rx="10" fill="#2f6fed"/>
+<text x="314" y="251" font-size="12" fill="#ffffff" font-weight="700" font-family="sans-serif">Kuis Retrofit</text>
+<rect x="290" y="370" width="200" height="60" fill="#ffffff" stroke="#e2e8f0"/>
+<circle cx="323" cy="390" r="8" fill="#94a3b8"/>
+<text x="323" y="416" font-size="10" fill="#94a3b8" font-weight="400" text-anchor="middle" font-family="sans-serif">Jadwal</text>
+<circle cx="390" cy="390" r="8" fill="#2f6fed"/>
+<text x="390" y="416" font-size="10" fill="#2f6fed" font-weight="700" text-anchor="middle" font-family="sans-serif">Tugas</text>
+<circle cx="457" cy="390" r="8" fill="#94a3b8"/>
+<text x="457" y="416" font-size="10" fill="#94a3b8" font-weight="400" text-anchor="middle" font-family="sans-serif">Profil</text>
+<text x="390" y="478" font-size="14" fill="#e2e8f0" font-weight="700" text-anchor="middle" font-family="sans-serif">Tab Tugas</text>
+<rect x="540" y="20" width="220" height="420" rx="30" fill="#0b1220" stroke="#334155" stroke-width="2"/>
+<rect x="550" y="30" width="200" height="400" rx="20" fill="#f8fafc"/>
+<rect x="550" y="30" width="200" height="44" fill="#2f6fed"/>
+<text x="564" y="58" font-size="14" fill="#ffffff" font-weight="700" font-family="sans-serif">Detail Tugas</text>
+<text x="564" y="98" font-size="15" fill="#1f2937" font-weight="700" font-family="sans-serif">Laporan Fragment</text>
+<text x="564" y="118" font-size="11" fill="#64748b" font-weight="400" font-family="sans-serif">Batas: Jumat</text>
+<rect x="562" y="134" width="176" height="46" rx="10" fill="#fff7ed" stroke="#fdba74"/>
+<text x="574" y="153" font-size="10" fill="#9a3412" font-weight="700" font-family="sans-serif">Status</text>
+<text x="574" y="169" font-size="11" fill="#9a3412" font-weight="400" font-family="sans-serif">Belum dikumpulkan</text>
+<rect x="562" y="196" width="176" height="40" rx="10" fill="#2f6fed"/>
+<text x="650" y="221" font-size="12" fill="#ffffff" font-weight="700" text-anchor="middle" font-family="sans-serif">Kembali</text>
+<rect x="550" y="370" width="200" height="60" fill="#ffffff" stroke="#e2e8f0"/>
+<circle cx="583" cy="390" r="8" fill="#94a3b8"/>
+<text x="583" y="416" font-size="10" fill="#94a3b8" font-weight="400" text-anchor="middle" font-family="sans-serif">Jadwal</text>
+<circle cx="650" cy="390" r="8" fill="#2f6fed"/>
+<text x="650" y="416" font-size="10" fill="#2f6fed" font-weight="700" text-anchor="middle" font-family="sans-serif">Tugas</text>
+<circle cx="717" cy="390" r="8" fill="#94a3b8"/>
+<text x="717" y="416" font-size="10" fill="#94a3b8" font-weight="400" text-anchor="middle" font-family="sans-serif">Profil</text>
+<text x="650" y="478" font-size="14" fill="#e2e8f0" font-weight="700" text-anchor="middle" font-family="sans-serif">Layar Detail</text>
+</svg>
+  <figcaption><b>Target tampilan</b><br>Tab Jadwal dan Tugas memakai BottomNavigation. Layar Detail muncul setelah salah satu tugas ditekan.</figcaption>
+</figure>
+<h3>Susunan Berkas Proyek</h3>
+<div class="table-wrapper"><table>
+<tr><th>Berkas</th><th>Fungsi</th></tr>
+<tr><td><code class="inline-code">MainActivity.kt</code></td><td>Activity utama, memilih Fragment saat menu ditekan</td></tr>
+<tr><td><code class="inline-code">JadwalFragment.kt</code>, <code class="inline-code">TugasFragment.kt</code>, <code class="inline-code">ProfilFragment.kt</code></td><td>Tiga tab di bagian bawah</td></tr>
+<tr><td><code class="inline-code">DetailTugasFragment.kt</code></td><td>Layar detail, menerima judul dan batas lewat arguments</td></tr>
+<tr><td><code class="inline-code">activity_main.xml</code>, <code class="inline-code">bottom_nav_menu.xml</code></td><td>Wadah Fragment dan daftar menu bawah</td></tr>
+</table></div>
+
+</section>
+
+<section id="persiapan" class="card">
+  <div class="card-header">
+    <div class="card-icon">3</div>
+    <h2 class="card-title">Persiapan Proyek &amp; Dependensi</h2>
+  </div>
+<ol class="step-list">
+  <li>Buka Android Studio, pilih <b>New Project</b>, lalu pilih template <b>Empty Views Activity</b>.</li>
+  <li>Isi <b>Name</b> dengan <code class="inline-code">Agenda Kuliah</code>, <b>Package name</b> dengan <code class="inline-code">com.example.agendakuliah</code>, dan <b>Language</b> dengan Kotlin.</li>
+  <li>Tunggu proyek selesai dibuka dan Gradle selesai disinkronkan.</li>
+  <li>Buka <code class="inline-code">app/build.gradle.kts (Module :app)</code>, lalu tambahkan dua dependensi berikut di dalam blok <code class="inline-code">dependencies</code>.</li>
+</ol>
+<div class="code-block"><div class="code-header"><span class="code-title">app/build.gradle.kts (Module :app)</span><span class="code-lang">Gradle</span></div><pre>dependencies {
+    implementation("androidx.fragment:fragment-ktx:1.9.1")
+    implementation("com.google.android.material:material:1.12.0")
+}</pre></div><ol class="step-list">
+  <li>Klik <b>Sync Now</b> di bagian atas layar.</li>
+</ol>
+<div class="info-box warning"><div class="info-box-title">Perhatikan</div><p style="margin:0">Dependensi <code class="inline-code">material</code> adalah contoh versi. Periksa versi stabil terbaru di Maven sebelum dipakai, lalu sesuaikan angkanya.</p></div>
+</section>
+
+<section id="menu" class="card">
+  <div class="card-header">
+    <div class="card-icon">4</div>
+    <h2 class="card-title">Layout Utama, Menu, dan Ikon</h2>
+  </div>
+<p>Pada langkah ini Anda membuat wadah Fragment, menu bawah, dan tiga ikon. Ikon sudah tersedia di Teori 9, sehingga isinya disalin langsung dari sana.</p>
+<ol class="step-list">
+  <li>Buka <code class="inline-code">res/layout/activity_main.xml</code>, lalu ganti seluruh isinya dengan kode berikut.</li>
+</ol>
+<div class="code-block"><div class="code-header"><span class="code-title">res/layout/activity_main.xml</span><span class="code-lang">XML</span></div><pre>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"&gt;
+
+    &lt;androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragmentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" /&gt;
+
+    &lt;com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:menu="@menu/bottom_nav_menu" /&gt;
+
+&lt;/LinearLayout&gt;</pre></div><ol class="step-list">
+  <li>Buat folder <code class="inline-code">res/menu</code> jika belum ada, lalu buat file <code class="inline-code">bottom_nav_menu.xml</code>.</li>
+</ol>
+<div class="code-block"><div class="code-header"><span class="code-title">res/menu/bottom_nav_menu.xml</span><span class="code-lang">XML</span></div><pre>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;menu xmlns:android="http://schemas.android.com/apk/res/android"&gt;
+
+    &lt;item
+        android:id="@+id/menu_jadwal"
+        android:icon="@drawable/ic_home"
+        android:title="Jadwal" /&gt;
+
+    &lt;item
+        android:id="@+id/menu_tugas"
+        android:icon="@drawable/ic_tugas"
+        android:title="Tugas" /&gt;
+
+    &lt;item
+        android:id="@+id/menu_profil"
+        android:icon="@drawable/ic_profil"
+        android:title="Profil" /&gt;
+
+&lt;/menu&gt;</pre></div><ol class="step-list">
+  <li>Buat tiga file di folder <code class="inline-code">res/drawable</code>. Isinya disalin dari Teori 9 bagian 06.</li>
+</ol>
+<div class="code-block"><div class="code-header"><span class="code-title">res/drawable/ic_home.xml</span><span class="code-lang">XML</span></div><pre>&lt;vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"&gt;
+    &lt;path
+        android:fillColor="#FF000000"
+        android:pathData="M10,20v-6h4v6h5v-8h3L12,3 2,12h3v8z" /&gt;
+&lt;/vector&gt;</pre></div><div class="code-block"><div class="code-header"><span class="code-title">res/drawable/ic_tugas.xml</span><span class="code-lang">XML</span></div><pre>&lt;vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"&gt;
+    &lt;path
+        android:fillColor="#FF000000"
+        android:pathData="M19,3h-4.18C14.4,1.84 13.3,1 12,1c-1.3,0 -2.4,0.84 -2.82,2H5c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2V5c0,-1.1 -0.9,-2 -2,-2zM12,3c0.55,0 1,0.45 1,1s-0.45,1 -1,1 -1,-0.45 -1,-1 0.45,-1 1,-1zM19,19H5V5h14v14zM7,12h10v2H7zM7,8h10v2H7zM7,16h7v2H7z" /&gt;
+&lt;/vector&gt;</pre></div><div class="code-block"><div class="code-header"><span class="code-title">res/drawable/ic_profil.xml</span><span class="code-lang">XML</span></div><pre>&lt;vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"&gt;
+    &lt;path
+        android:fillColor="#FF000000"
+        android:pathData="M12,12c2.21,0 4,-1.79 4,-4s-1.79,-4 -4,-4 -4,1.79 -4,4 1.79,4 4,4zM12,14c-2.67,0 -8,1.34 -8,4v2h16v-2c0,-2.66 -5.33,-4 -8,-4z" /&gt;
+&lt;/vector&gt;</pre></div><div class="info-box warning"><div class="info-box-title">Perhatikan</div><p style="margin:0">Id di <code class="inline-code">bottom_nav_menu.xml</code> harus sama dengan id yang dipakai di <code class="inline-code">MainActivity.kt</code>: <code class="inline-code">menu_jadwal</code>, <code class="inline-code">menu_tugas</code>, dan <code class="inline-code">menu_profil</code>.</p></div>
+</section>
+
+<section id="tab-sederhana" class="card">
+  <div class="card-header">
+    <div class="card-icon">5</div>
+    <h2 class="card-title">Membuat Fragment Jadwal dan Profil</h2>
+  </div>
+<p>Kedua Fragment ini hanya berisi teks. Fokusnya adalah memastikan pola pembuatan Fragment sudah benar, sebelum masuk ke logika yang lebih rumit.</p>
+<ol class="step-list">
+  <li>Buat layout <code class="inline-code">res/layout/fragment_jadwal.xml</code>.</li>
+</ol>
+<div class="code-block"><div class="code-header"><span class="code-title">res/layout/fragment_jadwal.xml</span><span class="code-lang">XML</span></div><pre>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"&gt;
+
+    &lt;TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Jadwal Hari Ini"
+        android:textSize="22sp"
+        android:textStyle="bold" /&gt;
+
+    &lt;TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:padding="14dp"
+        android:background="#E0F2FE"
+        android:text="08.00 - 10.00  Pemrograman Android (R.301)"
+        android:textSize="16sp" /&gt;
+
+    &lt;TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:padding="14dp"
+        android:background="#E0F2FE"
+        android:text="13.00 - 15.00  Basis Data (R.204)"
+        android:textSize="16sp" /&gt;
+
+&lt;/LinearLayout&gt;</pre></div><ol class="step-list">
+  <li>Buat kelas <code class="inline-code">JadwalFragment.kt</code> di package <code class="inline-code">com.example.agendakuliah</code>.</li>
+</ol>
+<div class="code-block"><div class="code-header"><span class="code-title">JadwalFragment.kt</span><span class="code-lang">Kotlin</span></div><pre>package com.example.agendakuliah
+
+import androidx.fragment.app.Fragment
+
+class JadwalFragment : Fragment(R.layout.fragment_jadwal)</pre></div><ol class="step-list">
+  <li>Buat layout <code class="inline-code">res/layout/fragment_profil.xml</code>.</li>
+</ol>
+<div class="code-block"><div class="code-header"><span class="code-title">res/layout/fragment_profil.xml</span><span class="code-lang">XML</span></div><pre>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"&gt;
+
+    &lt;TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ayu Rahmawati"
+        android:textSize="22sp"
+        android:textStyle="bold" /&gt;
+
+    &lt;TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Teknik Informatika - Semester 5"
+        android:textSize="16sp" /&gt;
+
+&lt;/LinearLayout&gt;</pre></div><ol class="step-list">
+  <li>Buat kelas <code class="inline-code">ProfilFragment.kt</code>.</li>
+</ol>
+<div class="code-block"><div class="code-header"><span class="code-title">ProfilFragment.kt</span><span class="code-lang">Kotlin</span></div><pre>package com.example.agendakuliah
+
+import androidx.fragment.app.Fragment
+
+class ProfilFragment : Fragment(R.layout.fragment_profil)</pre></div><div class="info-box tip"><div class="info-box-title">Pola yang sama</div><p style="margin:0">Setiap Fragment baru selalu mengikuti tiga hal: layout XML, kelas yang mewarisi <code class="inline-code">Fragment(R.layout.nama_layout)</code>, dan id menu yang sesuai.</p></div>
+</section>
+
+<section id="tugas" class="card">
+  <div class="card-header">
+    <div class="card-icon">6</div>
+    <h2 class="card-title">Membuat TugasFragment</h2>
+  </div>
+<p>TugasFragment berisi tiga tombol. Setiap tombol membuka layar detail dengan data yang berbeda. Tombol dipasang di <code class="inline-code">onViewCreated</code>, karena View sudah tersedia pada tahap itu.</p>
+<ol class="step-list">
+  <li>Buat layout <code class="inline-code">res/layout/fragment_tugas.xml</code>.</li>
+</ol>
+<div class="code-block"><div class="code-header"><span class="code-title">res/layout/fragment_tugas.xml</span><span class="code-lang">XML</span></div><pre>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"&gt;
+
+    &lt;TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Daftar Tugas"
+        android:textSize="22sp"
+        android:textStyle="bold" /&gt;
+
+    &lt;Button
+        android:id="@+id/btnTugas1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Laporan Fragment" /&gt;
+
+    &lt;Button
+        android:id="@+id/btnTugas2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Latihan BottomNav" /&gt;
+
+    &lt;Button
+        android:id="@+id/btnTugas3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Kuis Retrofit" /&gt;
+
+&lt;/LinearLayout&gt;</pre></div><ol class="step-list">
+  <li>Buat kelas <code class="inline-code">TugasFragment.kt</code>. Perhatikan fungsi <code class="inline-code">bukaDetail</code>, yang menukar isi wadah dan menyimpan transaksi di back stack.</li>
+</ol>
+<div class="code-block"><div class="code-header"><span class="code-title">TugasFragment.kt</span><span class="code-lang">Kotlin</span></div><pre>package com.example.agendakuliah
+
+import android.os.Bundle
+import android.view.View
+import android.widget.Button
+import androidx.fragment.app.Fragment
+
+class TugasFragment : Fragment(R.layout.fragment_tugas) {
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        view.findViewById&lt;Button&gt;(R.id.btnTugas1).setOnClickListener {
+            bukaDetail("Laporan Fragment", "Jumat")
+        }
+        view.findViewById&lt;Button&gt;(R.id.btnTugas2).setOnClickListener {
+            bukaDetail("Latihan BottomNav", "Senin")
+        }
+        view.findViewById&lt;Button&gt;(R.id.btnTugas3).setOnClickListener {
+            bukaDetail("Kuis Retrofit", "Rabu")
+        }
+    }
+
+    private fun bukaDetail(judul: String, batas: String) {
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, DetailTugasFragment.newInstance(judul, batas))
+            .addToBackStack("detail")
+            .commit()
+    }
+}</pre></div><div class="info-box note"><div class="info-box-title">Mengapa <code class="inline-code">addToBackStack</code>?</div><p style="margin:0">Tanpa baris ini, tombol Back langsung menutup aplikasi, bukan kembali ke daftar tugas. Nama <code class="inline-code">"detail"</code> hanya label untuk transaksi tersebut.</p></div>
+</section>
+
+<section id="detail" class="card">
+  <div class="card-header">
+    <div class="card-icon">7</div>
+    <h2 class="card-title">Membuat DetailTugasFragment dengan Arguments</h2>
+  </div>
+<p>Data dikirim lewat <i>arguments</i>, yaitu <code class="inline-code">Bundle</code> yang disimpan bersama Fragment. Cara ini aman saat layar diputar, karena data ikut dipulihkan bersama Fragment.</p>
+<ol class="step-list">
+  <li>Buat layout <code class="inline-code">res/layout/fragment_detail_tugas.xml</code>.</li>
+</ol>
+<div class="code-block"><div class="code-header"><span class="code-title">res/layout/fragment_detail_tugas.xml</span><span class="code-lang">XML</span></div><pre>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"&gt;
+
+    &lt;TextView
+        android:id="@+id/tvJudulDetail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="22sp"
+        android:textStyle="bold" /&gt;
+
+    &lt;TextView
+        android:id="@+id/tvBatasDetail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textSize="16sp" /&gt;
+
+    &lt;TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Status: Belum dikumpulkan"
+        android:textSize="16sp" /&gt;
+
+    &lt;Button
+        android:id="@+id/btnKembali"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Kembali" /&gt;
+
+&lt;/LinearLayout&gt;</pre></div><ol class="step-list">
+  <li>Buat kelas <code class="inline-code">DetailTugasFragment.kt</code>. Fungsi <code class="inline-code">newInstance</code> adalah satu-satunya cara membuat Fragment ini dengan data.</li>
+</ol>
+<div class="code-block"><div class="code-header"><span class="code-title">DetailTugasFragment.kt</span><span class="code-lang">Kotlin</span></div><pre>package com.example.agendakuliah
+
+import android.os.Bundle
+import android.view.View
+import android.widget.Button
+import android.widget.TextView
+import androidx.fragment.app.Fragment
+
+class DetailTugasFragment : Fragment(R.layout.fragment_detail_tugas) {
+
+    companion object {
+        private const val ARG_JUDUL = "judul"
+        private const val ARG_BATAS = "batas"
+
+        fun newInstance(judul: String, batas: String) = DetailTugasFragment().apply {
+            arguments = Bundle().apply {
+                putString(ARG_JUDUL, judul)
+                putString(ARG_BATAS, batas)
+            }
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val judul = arguments?.getString(ARG_JUDUL).orEmpty()
+        val batas = arguments?.getString(ARG_BATAS).orEmpty()
+
+        view.findViewById&lt;TextView&gt;(R.id.tvJudulDetail).text = judul
+        view.findViewById&lt;TextView&gt;(R.id.tvBatasDetail).text = "Batas: $batas"
+
+        view.findViewById&lt;Button&gt;(R.id.btnKembali).setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
+    }
+}</pre></div><div class="info-box warning"><div class="info-box-title">Jangan menyimpan data di konstruktor</div><p style="margin:0">Fragment dapat dibuat ulang oleh sistem, dan konstruktor yang berisi parameter akan hilang saat itu terjadi. Simpan data di <code class="inline-code">arguments</code> seperti pada kode di atas.</p></div>
+</section>
+
+<section id="mainactivity" class="card">
+  <div class="card-header">
+    <div class="card-icon">8</div>
+    <h2 class="card-title">Menghubungkan Semua di MainActivity</h2>
+  </div>
+<p>MainActivity menghubungkan menu bawah dengan Fragment. Ada dua hal penting: layar pertama hanya dipasang saat Activity baru dibuka, dan setiap pindah tab menutup layar detail yang masih tersimpan.</p>
+<ol class="step-list">
+  <li>Buka <code class="inline-code">MainActivity.kt</code>, lalu ganti seluruh isinya dengan kode berikut.</li>
+</ol>
+<div class="code-block"><div class="code-header"><span class="code-title">MainActivity.kt</span><span class="code-lang">Kotlin</span></div><pre>package com.example.agendakuliah
+
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import com.google.android.material.bottomnavigation.BottomNavigationView
+
+class MainActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        val bottomNav = findViewById&lt;BottomNavigationView&gt;(R.id.bottomNav)
+
+        if (savedInstanceState == null) {
+            gantiFragment(JadwalFragment())
+        }
+
+        bottomNav.setOnItemSelectedListener { item -&gt;
+            val fragment: Fragment = when (item.itemId) {
+                R.id.menu_jadwal -&gt; JadwalFragment()
+                R.id.menu_tugas -&gt; TugasFragment()
+                R.id.menu_profil -&gt; ProfilFragment()
+                else -&gt; return@setOnItemSelectedListener false
+            }
+            // Tutup layar detail yang masih tersimpan, lalu pindah tab.
+            supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+            gantiFragment(fragment)
+            true
+        }
+    }
+
+    private fun gantiFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .commit()
+    }
+}</pre></div><ol class="step-list">
+  <li>Pastikan semua berkas di atas berada di package <code class="inline-code">com.example.agendakuliah</code>, lalu klik <b>Build &gt; Make Project</b>.</li>
+</ol>
+<div class="info-box tip"><div class="info-box-title">Mengapa <code class="inline-code">savedInstanceState == null</code>?</div><p style="margin:0">Saat layar diputar, Activity dibuat ulang. Pengecekan ini mencegah tab pertama dipasang lagi dan menimpa tab yang sedang tampil.</p></div>
+</section>
+
+<section id="jalankan" class="card">
+  <div class="card-header">
+    <div class="card-icon">9</div>
+    <h2 class="card-title">Menjalankan &amp; Menguji Hasil</h2>
+  </div>
+<p>Jalankan aplikasi di emulator atau HP. Lakukan urutan berikut, lalu bandingkan dengan target di bagian 2.</p>
+<ol class="step-list">
+  <li>Tab <b>Jadwal</b> terbuka pertama, dengan dua jadwal kuliah.</li>
+  <li>Tekan ikon <b>Tugas</b>. Tiga tombol tugas tampil.</li>
+  <li>Tekan <b>Laporan Fragment</b>. Layar detail menampilkan judul <b>Laporan Fragment</b> dan <b>Batas: Jumat</b>.</li>
+  <li>Tekan tombol Back di perangkat. Daftar tugas kembali tampil, bukan keluar aplikasi.</li>
+  <li>Tekan <b>Kuis Retrofit</b>, lalu tekan ikon <b>Profil</b>. Layar Profil tampil dan tidak ada layar detail yang tertinggal.</li>
+  <li>Tekan Back. Aplikasi keluar, karena tidak ada lagi transaksi di back stack.</li>
+</ol>
+
+</section>
+
+<section id="backstack" class="card">
+  <div class="card-header">
+    <div class="card-icon">10</div>
+    <h2 class="card-title">Memahami Back Stack</h2>
+  </div>
+<p>Setiap <code class="inline-code">commit()</code> dengan <code class="inline-code">addToBackStack</code> menyimpan satu langkah yang bisa dibatalkan. Tombol Back membatalkan langkah terakhir.</p>
+<div class="table-wrapper"><table>
+<tr><th>Aksi pengguna</th><th>Transaksi</th><th>Masuk back stack?</th></tr>
+<tr><td>Membuka Jadwal saat aplikasi dibuka</td><td>replace JadwalFragment</td><td>Tidak</td></tr>
+<tr><td>Menekan tab Tugas</td><td>popBackStack, lalu replace TugasFragment</td><td>Tidak</td></tr>
+<tr><td>Menekan tugas di daftar</td><td>replace DetailTugasFragment</td><td>Ya, dengan nama <code class="inline-code">detail</code></td></tr>
+<tr><td>Tombol Back atau Kembali di detail</td><td>popBackStack</td><td>Langkah detail dihapus</td></tr>
+</table></div>
+<div class="info-box note"><div class="info-box-title">Catatan</div><p style="margin:0">Tab tidak masuk back stack, sehingga Back dari tab pertama langsung menutup aplikasi. Ini sesuai pola BottomNavigation: menu bawah memindahkan tujuan, bukan menambah riwayat.</p></div>
+</section>
+
+<section id="masalah" class="card">
+  <div class="card-header">
+    <div class="card-icon">11</div>
+    <h2 class="card-title">Pemecahan Masalah Umum</h2>
+  </div>
+<div class="table-wrapper"><table>
+<tr><th>Gejala</th><th>Penyebab</th><th>Solusi</th></tr>
+<tr><td>Crash <i>No view found for id</i></td><td>Id <code class="inline-code">fragmentContainer</code> salah atau tidak ada di layout</td><td>Samakan id di <code class="inline-code">activity_main.xml</code> dan <code class="inline-code">MainActivity.kt</code></td></tr>
+<tr><td>Tab tidak berpindah</td><td>Id menu di kode berbeda dengan <code class="inline-code">bottom_nav_menu.xml</code></td><td>Periksa <code class="inline-code">menu_jadwal</code>, <code class="inline-code">menu_tugas</code>, dan <code class="inline-code">menu_profil</code></td></tr>
+<tr><td>Tombol Back menutup aplikasi saat di detail</td><td><code class="inline-code">addToBackStack</code> belum dipasang</td><td>Tambahkan <code class="inline-code">.addToBackStack("detail")</code> sebelum <code class="inline-code">commit()</code></td></tr>
+<tr><td>Layar detail kosong atau menampilkan <code class="inline-code">Batas:</code> tanpa isi</td><td>Data tidak dikirim lewat <code class="inline-code">newInstance</code></td><td>Pastikan Fragment dibuat dengan <code class="inline-code">DetailTugasFragment.newInstance(...)</code></td></tr>
+<tr><td>Tombol tugas tidak merespons</td><td>Id tombol di kode tidak sama dengan layout</td><td>Periksa <code class="inline-code">btnTugas1</code>, <code class="inline-code">btnTugas2</code>, dan <code class="inline-code">btnTugas3</code></td></tr>
+<tr><td>Ikon menu tidak tampil</td><td>Nama berkas drawable tidak sama dengan yang dipakai di menu</td><td>Periksa nama <code class="inline-code">ic_home</code>, <code class="inline-code">ic_tugas</code>, dan <code class="inline-code">ic_profil</code></td></tr>
+</table></div>
+
+</section>
+
+<section id="rangkuman" class="card">
+  <div class="card-header">
+    <div class="card-icon">12</div>
+    <h2 class="card-title">Rangkuman &amp; Langkah Lanjutan</h2>
+  </div>
+<ul class="checklist">
+<li>Fragment dipasang ke <code class="inline-code">FragmentContainerView</code> lewat <code class="inline-code">replace</code>.</li>
+<li>BottomNavigationView memilih Fragment berdasarkan <code class="inline-code">item.itemId</code>.</li>
+<li>Data dikirim ke Fragment lewat <code class="inline-code">arguments</code> melalui fungsi <code class="inline-code">newInstance</code>.</li>
+<li><code class="inline-code">addToBackStack</code> membuat tombol Back kembali ke layar sebelumnya.</li>
+<li>Tab dibersihkan dari back stack saat berpindah, agar Back tidak kembali ke layar detail yang sudah tertutup.</li>
+</ul>
+<h3>Langkah Lanjutan (opsional)</h3>
+<ul class="dots">
+<li><b>Ganti tombol dengan daftar:</b> gunakan RecyclerView (lihat Praktek 11) agar daftar tugas bisa berisi banyak item.</li>
+<li><b>Navigation Component:</b> pelajari cara mengatur perpindahan Fragment dengan navigation graph, seperti dibahas di Teori 9 bagian lanjutan.</li>
+<li><b>Simpan status tugas:</b> gunakan ViewModel agar status tugas tidak hilang saat Fragment dibuat ulang.</li>
+</ul>
+
+</section>
+
+
+<footer class="main-footer">
+  <p><strong>Praktek Android &mdash; Fragment dan BottomNavigation</strong></p>
+  <p>Studi kasus: Agenda Kuliah &bull; Fragment KTX 1.9.1 &bull; Material Components 1.12.0</p>
+</footer>
+
+</div>
+</div>
+
+<button class="scroll-top" id="scrollTop" onclick="scrollToTop()" aria-label="Ke atas">&#8679;</button>
+
+<script>
+function toggleNav(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+
+var navLinks = Array.prototype.slice.call(document.querySelectorAll('#sidebarNav a'));
+var navSections = navLinks.map(function(a){
+  return document.querySelector(a.getAttribute('href'));
+});
+var scrollBtn = document.getElementById('scrollTop');
+
+function perbaruiMenu(){
+  var posisi = window.scrollY + 150;
+  var aktif = navSections[0];
+  navSections.forEach(function(sec){
+    if (sec && sec.offsetTop <= posisi) { aktif = sec; }
+  });
+  navLinks.forEach(function(a){
+    a.classList.toggle('active', !!aktif && a.getAttribute('href') === '#' + aktif.id);
+  });
+  if (window.scrollY > 400) { scrollBtn.classList.add('visible'); }
+  else { scrollBtn.classList.remove('visible'); }
+}
+
+window.addEventListener('scroll', perbaruiMenu);
+window.addEventListener('resize', perbaruiMenu);
+perbaruiMenu();
+
+navLinks.forEach(function(a){
+  a.addEventListener('click', function(){
+    if (window.innerWidth <= 992) {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('show');
+    }
+  });
+});
+
+function scrollToTop(){ window.scrollTo({top:0, behavior:'smooth'}); }
+
+document.querySelectorAll('.code-block').forEach(function(blok){
+  var kepala = blok.querySelector('.code-header');
+  var pre = blok.querySelector('pre');
+  if (!kepala || !pre) { return; }
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.textContent = 'Salin kode';
+  btn.style.cssText = 'background:#3a3f4b;color:#abb2bf;border:1px solid #4b5263;border-radius:6px;' +
+                      'padding:.25rem .6rem;font-size:.72rem;cursor:pointer';
+  btn.addEventListener('click', function(){
+    var teks = pre.textContent;
+    var selesai = function(){ btn.textContent = 'Tersalin!'; setTimeout(function(){ btn.textContent = 'Salin kode'; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(teks).then(selesai, function(){ salinCaraLama(teks); selesai(); });
+    } else { salinCaraLama(teks); selesai(); }
+  });
+  kepala.appendChild(btn);
+});
+
+function salinCaraLama(teks){
+  var ta = document.createElement('textarea');
+  ta.value = teks;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+}
+</script>
+
+</body>
+</html>
