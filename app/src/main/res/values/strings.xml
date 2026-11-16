@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Agenda Kuliah</string>
-    <string name="menu_jadwal">Jadwal</string>
-    <string name="menu_tugas">Tugas</string>
-    <string name="menu_profil">Profil</string>
+    <string name="app_name">Lokasi Saya</string>
 </resources>
